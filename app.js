@@ -1,15 +1,26 @@
 const express = require("express");
 const app = express();
 const mongoose =require("mongoose");
-const Listing = require("./models/listing.js");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
-const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
-const Joi = require("joi");
-const {listingSchema,reviewSchema }= require("./Schema.js");
-const Review = require("./models/reviews.js");
+const session = require("express-session");
+const flash = require("connect-flash");
+
+const sessionOptions = {
+    secret : "mysupersecretcode",
+    resave : false,
+    saveUninitialized : true,
+    cookie : {
+        expires : Date.now() + 7 * 24 * 60 * 60 * 1000,
+        maxAge : 7 * 24 * 60 * 60 * 1000,
+        httpOnly : true
+    }
+};
+
+const listings = require("./routes/listing.js");
+const reviews = require("./routes/review.js");
 
 main().then(()=> {
     console.log("connected to DB");
@@ -30,26 +41,18 @@ app.engine('ejs',ejsMate);
 app.use(express.static(path.join(__dirname,"public")));
 // app.use(express.json()); // to parse JSON bodies
 
+app.use(session(sessionOptions));
+app.use(flash());
 
-const validateListing = (req,res,next) => {
-    let {error} = listingSchema.validate(req.body);
-    if(error){
-        const msg = error.details.map(el => el.message).join(', ');
-        throw new ExpressError(400,msg);
-    }else{
-        next();
-    }
-}
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    next();
+});
 
-const validateReview = (req,res,next) => {
-    let {error, value} = reviewSchema.validate(req.body);
-    if(error){
-        const msg = error.details.map(el => el.message).join(', ');
-        throw new ExpressError(400,msg);
-    }else{
-        next();
-    }
-}
+
+app.use("/listings",listings);
+app.use("/listings/:id/reviews",reviews);
 
 app.get("/",(req,res) => {
     res.send("This is root");
@@ -67,76 +70,6 @@ app.get("/",(req,res) => {
 //     console.log("sample was saved.");
 //     res.send(sampleListing);
 // });
-
-//index route
-app.get("/listings", wrapAsync( async (req, res) => {
-    const listings = await Listing.find({});
-    res.render("listings/index.ejs", {listings});
-}));
-
-//new route
-app.get("/listings/new",(req,res) => {
-    res.render("listings/new.ejs");
-});
-
-//show listing route
-app.get("/listings/:id", wrapAsync( async (req,res) => {
-    let id = req.params.id;
-    const listing = await Listing.findById(id).populate("reviews");
-    //console.log (listing);
-    res.render("listings/show.ejs", {listing});
-}));
-
-//create listing route
-app.post("/listings", validateListing, wrapAsync( async (req,res,next) => {
-    
-    let newListing = Listing(req.body.listing);
-    await newListing.save();
-    res.redirect("/listings");
-}));
-
-//edit listing route
-app.get("/listings/:id/edit", wrapAsync( async (req,res) => {
-    let id = req.params.id;
-    const listing = await Listing.findById(id);
-    res.render("listings/edit.ejs",{listing});
-}));
-
-//update listing route
-app.put("/listings/:id", validateListing, wrapAsync( async (req,res) =>{
-    if(! req.body){
-        throw(new ExpressError(400,"send valid data for listing"));
-    }
-    let id = req.params.id;
-    await Listing.findByIdAndUpdate(id,{...req.body.listing});
-    res.redirect(`/listings/${id}`);
-}));
-
-//delete listing route
-app.delete("/listings/:id", wrapAsync( async (req,res) => {
-    let id = req.params.id;
-    await Listing.findByIdAndDelete(id);
-    res.redirect("/listings");
-}));
-
-//reviews
-//post review route
-app.post("/listings/:id/reviews", validateReview, wrapAsync(async (req ,res) => {
-    let listing = await Listing.findById(req.params.id);
-    const newReview = new Review(req.body.review);
-    listing.reviews.push(newReview);
-    await newReview.save();
-    await listing.save();
-    res.redirect(`/listings/${listing.id}`)
-}));
-
-//delete review route 
-app.delete("/listings/:id/reviews/:reviewId",wrapAsync(async (req,res) => {
-    let {id, reviewId} = req.params;
-    await Listing.findByIdAndUpdate(id,{$pull:{reviews:reviewId}});
-    await Review.findByIdAndDelete(reviewId);
-    res.redirect(`/listings/${id}`)
-}))
 
 app.all("/{*any}", (req, res,next)=>{
     next(new ExpressError(404, "Page not found!"));

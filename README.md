@@ -1,30 +1,34 @@
-WanderLust 🌍
+🌍 WanderLust
 
-WanderLust is an ongoing Travel-Tech web application, designed as an Airbnb-like platform for property listings.
-It allows users to browse, create, update, delete, and review property listings with a responsive and user-friendly interface.
+WanderLust is a Travel-Tech web application inspired by Airbnb, designed for browsing, creating, managing, and reviewing property listings.
+It provides a responsive, user-friendly interface with robust backend features and modern validation practices.
 
 ✨ Features
 
-🔹 Full CRUD functionality for property listings
+🔹 Full CRUD functionality for property listings (Create, Read, Update, Delete)
 
 🔹 Review System – users can add reviews & ratings for each listing
 
+🔹 Flash Messages – instant success/error feedback using connect-flash and Bootstrap alerts
+
 🔹 Validation with Joi – schema-based request validation for secure & consistent data handling
 
-🔹 Client & Server-Side Error Handling – centralized error middleware + frontend error messages
+🔹 Error Handling – centralized middleware + client-side error alerts
 
-🔹 Responsive UI with HTML, CSS, JavaScript, EJS, and Bootstrap
+🔹 Responsive UI – built with HTML, CSS, JavaScript, EJS, and Bootstrap
 
-🔹 Backend powered by Node.js and Express
+🔹 Backend powered by Node.js & Express
 
-🔹 Data management with MongoDB
+🔹 Database with MongoDB for scalable data storage
 
-🔹 Dynamic content rendering for improved user experience
+🔹 Dynamic Content Rendering – seamless user experience with server-side EJS templates
 
-🔹 Work in progress – more features & optimizations to come
+🔹 🚧 Work in Progress – more features & optimizations coming soon
 
 🛠️ Tech Stack
 
 Frontend: HTML, CSS, JavaScript, EJS, Bootstrap
-Backend: Node.js, Express, Joi (for validation)
+
+Backend: Node.js, Express, Joi (validation), connect-flash (flash messages)
+
 Database: MongoDB
